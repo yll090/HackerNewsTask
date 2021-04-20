@@ -47,11 +47,14 @@ export const fetchStories = () => async (dispatch: Dispatch) => {
     dispatch(getData());
     const response: Response = await fetchTopStoriesIDs();
     const newTopStoriesIds: Array<number> = await response.json();
-    const promises = [];
-    for (let i = 0; i < Math.min(MAX_ITEMS, newTopStoriesIds.length); i++) {
-      const id: number = (newTopStoriesIds.length * Math.random()) | 0;
-      promises.push(fetchItemDetailsWrapper(newTopStoriesIds[id]));
+    const promises: Array<Promise<HNItem | undefined>> = [];
+    const randomIndices = new Set<number>();
+    while (randomIndices.size < Math.min(MAX_ITEMS, newTopStoriesIds.length)) {
+      randomIndices.add((newTopStoriesIds.length * Math.random()) | 0);
     }
+    randomIndices.forEach(randomIndex =>
+      promises.push(fetchItemDetailsWrapper(newTopStoriesIds[randomIndex])),
+    );
     Promise.all(promises)
       .then(stories => {
         const sorted = stories.filter(isHNItem).sort(sortByScore);
